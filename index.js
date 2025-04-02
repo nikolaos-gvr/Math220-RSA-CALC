@@ -1,3 +1,58 @@
+// RSA Algorithm Variables:
+
+// p, q: Two large prime numbers selected for RSA key generation.
+//    - p: The first prime number.
+//    - q: The second prime number.
+// These numbers are used to calculate n (the modulus) and phi(n) (Euler's Totient function).
+
+// n: The modulus for both the public and private keys.
+//    - n = p * q
+// n is used in both encryption and decryption operations. It's a product of the two primes, p and q.
+
+// phi(n): Euler's Totient function of n, which is used to compute the private exponent (d).
+//    - phi(n) = (p - 1) * (q - 1)
+// It represents the number of integers less than n that are coprime with n (have no common divisors other than 1).
+
+// e: The public exponent (part of the public key). 
+//    - It's chosen such that 1 < e < phi(n) and gcd(e, phi(n)) = 1 (e is coprime with phi(n)).
+// e is used for the encryption process and is public.
+
+
+// d: The private exponent (part of the private key).
+//    - It's the modular inverse of e modulo phi(n).
+//    - e * d ≡ 1 (mod phi(n))
+// d is used in the decryption process to reverse the encryption.
+
+// x0, x1: Variables used in the Extended Euclidean Algorithm (to calculate modular inverse).
+//    - x0 is the initial value, representing the inverse at the start of the algorithm.
+//    - x1 is the result of the algorithm that will hold the modular inverse of e modulo phi(n) after calculation.
+// These variables help in finding the value of `d` in the Extended Euclidean Algorithm.
+
+
+// RSA Encryption/Decryption Variables:
+
+// message: The plaintext message that needs to be encrypted or decrypted.
+//    - It will be converted to uppercase to simplify processing (in the provided code).
+
+// originalASCII: An array that holds the ASCII values of each character in the original message.
+//    - This is used for visualizing the encryption process and showing the ASCII representation of the original message.
+
+// encryptedASCII: An array that holds the encrypted ASCII values for each character in the message.
+//    - This represents the encrypted data after applying the RSA encryption algorithm (modular exponentiation).
+
+// encryptedString: A string of the encrypted ASCII values separated by commas.
+//    - This is used for visualizing the encrypted message in the webpage and preparing it for Base64 encoding.
+
+// encryptedBase64: A Base64-encoded version of the encrypted ASCII values.
+//    - Base64 encoding is used to safely represent the encrypted message as text that can be displayed easily on the page.
+
+// decryptedText: The resulting decrypted message after applying RSA decryption to the encrypted message.
+//    - This is the final text that will be shown after decrypting the Base64-encoded encrypted message.
+
+// gcd(a, b): A helper function that calculates the greatest common divisor of two numbers using the Euclidean algorithm.
+//    - It is used to ensure that the public exponent `e` is coprime with phi(n), i.e., gcd(e, phi(n)) = 1.
+//    - This is important for the RSA algorithm to work correctly.
+
 // Check if a number is prime
 function isPrime(num) {
     if (num < 2) return false;
