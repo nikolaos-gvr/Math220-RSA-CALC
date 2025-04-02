@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA Calculator</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <h1>RSA Calculator</h1>
+
+    <h2>Key Generation</h2>
+    <label for="p">Enter Prime p:</label>
+    <input type="number" id="p">
+    <label for="q">Enter Prime q:</label>
+    <input type="number" id="q">
+    <button onclick="generateKeys()">Generate Keys</button>
+
+    <h3>Generated Keys:</h3>
+    <p>n = <span id="n"></span></p>
+    <p>φ(n) = <span id="phi"></span></p>
+    <p>e = <span id="e"></span></p>
+    <p>d = <span id="d"></span></p>
+
+    <h2>Encryption</h2>
+    <label for="text-message">Enter Text:</label>
+    <input type="text" id="text-message">
+    <button onclick="encryptText()">Encrypt</button>
+
+    <h3>Encrypted Output:</h3>
+    <p>Original ASCII: <span id="original-ascii"></span></p>
+    <p>Encrypted ASCII: <span id="encrypted-ascii"></span></p>
+    <p>Encrypted Text: <span id="encrypted"></span></p>
+
+    <h2>Decryption</h2>
+    <button onclick="decryptText()">Decrypt</button>
+    <h3>Decrypted Text:</h3>
+    <p><span id="decrypted"></span></p>
+
+    <script src="index.js"></script>
+</body>
+</html>
