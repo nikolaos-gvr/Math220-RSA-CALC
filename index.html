@@ -3,89 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RSA Dual Key Simulator</title>
+  <title>RSA Dual User Simulator</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
-    input, select, button { margin: 10px 0; padding: 10px; width: 100%; }
-    .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    .output { font-family: monospace; background: #e9ecef; padding: 10px; border-radius: 5px; white-space: pre-wrap; }
+    .row { display: flex; flex-wrap: wrap; gap: 20px; }
+    .column { flex: 1; min-width: 300px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input, select, button, textarea { margin: 10px 0; padding: 10px; width: 100%; }
+    .output { font-family: monospace; background: #e9ecef; padding: 10px; border-radius: 5px; white-space: pre-wrap; margin-top: 5px; }
     h2, h3 { margin-top: 0; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>User A Keys</h2>
-  <input type="number" id="pA" placeholder="Prime p (A)" value="61">
-  <input type="number" id="qA" placeholder="Prime q (A)" value="53">
-  <input type="number" id="eA" placeholder="Public exponent e (A)" value="17">
-  <button onclick="generateKey('A')">Generate Key for A</button>
-  <div id="keyAOutput" class="output"></div>
-</div>
+<h2>RSA Dual User Simulator</h2>
+<!-- UI Elements for User A and User B, input fields for RSA parameters and messages -->
+<div class="row">
+  <div class="column">
+    <h3>User A</h3>
+    <!-- RSA Key Generation Inputs for User A -->
+    <input type="number" id="pA" placeholder="Prime p (A)" >
+    <input type="number" id="qA" placeholder="Prime q (A)" >
+    <input type="number" id="eA" placeholder="Public exponent e (A)">
+    <button onclick="generateKey('A')">Generate Key A</button>
+    <div id="keyAOutput" class="output"></div>
 
-<div class="container">
-  <h2>User B Keys</h2>
-  <input type="number" id="pB" placeholder="Prime p (B)" value="59">
-  <input type="number" id="qB" placeholder="Prime q (B)" value="47">
-  <input type="number" id="eB" placeholder="Public exponent e (B)" value="13">
-  <button onclick="generateKey('B')">Generate Key for B</button>
-  <div id="keyBOutput" class="output"></div>
-</div>
+    <!-- Message input and cryptographic operations for User A -->
+    <textarea id="msgA" placeholder="Message for A"></textarea>
+    <button onclick="signMessage('A')">Sign</button>
+    <div id="signAOutput" class="output"></div>
+    <button onclick="encryptMessage('A')">Encrypt Signed</button>
+    <div id="encryptAOutput" class="output"></div>
+    <button onclick="encryptRawMessage('A')">Encrypt Raw</button>
+    <div id="encryptARawOutput" class="output"></div>
+    <button onclick="decryptMessage('A')">Decrypt</button>
+    <div id="decryptAOutput" class="output"></div>
+    <button onclick="verifyMessage('A')">Verify</button>
+    <div id="verifyAOutput" class="output"></div>
+  </div>
 
-<div class="container">
-  <h2>Send a Message</h2>
-  <input type="text" id="message" placeholder="Enter message">
-  <label>Sender:</label>
-  <select id="sender">
-    <option value="A">User A</option>
-    <option value="B">User B</option>
-  </select>
-  <label>Receiver:</label>
-  <select id="receiver">
-    <option value="B">User B</option>
-    <option value="A">User A</option>
-  </select>
-  <button onclick="simulateCommunication()">Send Message</button>
-  <div id="simulationOutput" class="output"></div>
+  <div class="column">
+    <h3>User B</h3>
+    <!-- RSA Key Generation Inputs for User B -->
+    <input type="number" id="pB" placeholder="Prime p (B)">
+    <input type="number" id="qB" placeholder="Prime q (B)">
+    <input type="number" id="eB" placeholder="Public exponent e (B)">
+    <button onclick="generateKey('B')">Generate Key B</button>
+    <div id="keyBOutput" class="output"></div>
+
+    <!-- Message input and cryptographic operations for User B -->
+    <textarea id="msgB" placeholder="Message for B"></textarea>
+    <button onclick="signMessage('B')">Sign</button>
+    <div id="signBOutput" class="output"></div>
+    <button onclick="encryptMessage('B')">Encrypt Signed</button>
+    <div id="encryptBOutput" class="output"></div>
+    <button onclick="encryptRawMessage('B')">Encrypt Raw</button>
+    <div id="encryptBRawOutput" class="output"></div>
+    <button onclick="decryptMessage('B')">Decrypt</button>
+    <div id="decryptBOutput" class="output"></div>
+    <button onclick="verifyMessage('B')">Verify</button>
+    <div id="verifyBOutput" class="output"></div>
+  </div>
 </div>
 
 <script>
-/*
-  RSA Dual Key Simulator Explanation
+// Initialize character map and user key stores
+const charMap = Array.from({ length: 95 }, (_, i) => String.fromCharCode(i + 32));
+const users = {
+  A: { signed: [], encrypted: [], decrypted: [] },
+  B: { signed: [], encrypted: [], decrypted: [] }
+};
 
-  This tool simulates a secure communication using RSA encryption and digital signatures.
-
-  ──────────────── VARIABLES ────────────────
-  charMap:        Array of 95 printable ASCII characters (codes 32–126) used for encoding and decoding messages.
-  users:          Stores RSA key pairs (e, d, n) for User A and User B.
-
-  ──────────────── FUNCTIONS ────────────────
-  modExp:         Performs modular exponentiation: (base^exp) % mod, used for encryption/decryption.
-  isPrime:        Checks if a number is prime.
-  gcd:            Calculates greatest common divisor.
-  modInverse:     Computes modular inverse of e mod φ(n) using the extended Euclidean algorithm.
-  textToNumbers:  Encodes a message into 2-digit numbers using charMap.
-  numbersToText:  Decodes numbers back to readable text using charMap.
-  determineBlockSize:
-                  Determines how many numeric digits can safely fit into a block for RSA processing based on the modulus.
-  splitIntoBlocks:
-                  Splits the numeric string into equal-length blocks for RSA processing.
-  generateKey:    Generates RSA keys for a user from inputs p, q, and e, calculates n and d.
-  simulateCommunication:
-                  Handles full message flow:
-                    - Converts message to numbers
-                    - Signs using sender's private key (d)
-                    - Encrypts with receiver's public key (e)
-                    - Receiver decrypts with private key (d)
-                    - Verifies with sender's public key (e)
-                    - Decodes message back to text
-*/
-// Define the character map using printable ASCII characters (from code 32 to 126)
-const charMap = Array.from({length: 95}, (_, i) => String.fromCharCode(i + 32));
-// Store RSA keys for both users
-const users = { A: {}, B: {} };
-
-// Perform modular exponentiation: (base^exp) % mod
+// Modular exponentiation: (base^exp) % mod
 function modExp(base, exp, mod) {
   base = BigInt(base); exp = BigInt(exp); mod = BigInt(mod);
   let result = 1n;
@@ -97,20 +85,20 @@ function modExp(base, exp, mod) {
   return result;
 }
 
-// Check if a number is prime
+// Prime number check
 function isPrime(num) {
   if (num < 2) return false;
   for (let i = 2; i * i <= num; i++) if (num % i === 0) return false;
   return true;
 }
 
-// Compute the greatest common divisor
+// Compute GCD
 function gcd(a, b) {
   while (b !== 0) [a, b] = [b, a % b];
   return a;
 }
 
-// Compute modular inverse of e mod phi using Extended Euclidean Algorithm
+// Modular inverse using Extended Euclidean Algorithm
 function modInverse(e, phi) {
   let [a, b] = [e, phi], [x0, x1] = [0n, 1n];
   while (a > 1n) {
@@ -121,7 +109,7 @@ function modInverse(e, phi) {
   return x1 < 0n ? x1 + phi : x1;
 }
 
-// Convert input text to a string of 2-digit numbers based on charMap
+// Convert text to numeric string
 function textToNumbers(text) {
   return text.split('').map(c => {
     const i = charMap.indexOf(c);
@@ -129,12 +117,12 @@ function textToNumbers(text) {
   }).join('');
 }
 
-// Convert numeric values back to text using charMap
+// Convert numbers back to text
 function numbersToText(numbers) {
-  return numbers.map(n => n.toString().match(/.{1,2}/g).map(d => charMap[parseInt(d)] || '?').join('')).join('');
+  return numbers.map(n => n.toString().padStart(4, '0').match(/.{1,2}/g).map(d => charMap[parseInt(d)] || '?').join('')).join('');
 }
 
-// Determine the maximum safe block size (in digits) for encryption based on modulus n
+// Calculate optimal block size for a given modulus
 function determineBlockSize(n) {
   const digitsPerChar = 2;
   let size = 1;
@@ -146,7 +134,7 @@ function determineBlockSize(n) {
   return digitsPerChar * (size - 1);
 }
 
-// Split numeric string into equal-length blocks for RSA processing
+// Split string into numeric blocks
 function splitIntoBlocks(numStr, blockSize) {
   const blocks = [];
   for (let i = 0; i < numStr.length; i += blockSize) {
@@ -157,7 +145,7 @@ function splitIntoBlocks(numStr, blockSize) {
   return blocks;
 }
 
-// Generate RSA key pair for a user (given primes p, q, and exponent e)
+// Generate RSA key pair for a user
 function generateKey(user) {
   const p = parseInt(document.getElementById(`p${user}`).value);
   const q = parseInt(document.getElementById(`q${user}`).value);
@@ -171,55 +159,69 @@ function generateKey(user) {
     document.getElementById(`key${user}Output`).innerText = 'ERROR: e must be coprime to φ(n)'; return;
   }
   const d = modInverse(e, phi);
-  users[user] = { e, d, n };
-  document.getElementById(`key${user}Output`).innerText = `SUCCESS: Key generated\nn: ${n}\ne: ${e}\nd: ${d}`;
+  users[user] = { ...users[user], e, d, n };
+  document.getElementById(`key${user}Output`).innerText = `Key generated\nn: ${n}\ne: ${e}\nd: ${d}`;
 }
 
-// Simulate sending a message from one user to another:
-// 1. Encode text to numbers
-// 2. Sign with sender's private key
-// 3. Encrypt with receiver's public key
-// 4. Decrypt with receiver's private key
-// 5. Verify with sender's public key
-// 6. Decode back to text
-function simulateCommunication() {
-  const sender = document.getElementById("sender").value;
-  const receiver = document.getElementById("receiver").value;
-  const senderKeys = users[sender];
-  const receiverKeys = users[receiver];
-  if (!senderKeys.d || !receiverKeys.e) {
-    document.getElementById("simulationOutput").innerText = 'ERROR: Keys missing for sender or receiver';
-    return;
-  }
-  const message = document.getElementById("message").value;
-  const numeric = textToNumbers(message);
-  const blockSize = determineBlockSize(receiverKeys.n);
+// Sign a message using the user's private key
+function signMessage(user) {
+  const msg = document.getElementById(`msg${user}`).value;
+  const { d, n } = users[user];
+  if (!d) return alert('Private key missing');
+  const numeric = textToNumbers(msg);
+  const blockSize = determineBlockSize(n);
   const blocks = splitIntoBlocks(numeric, blockSize);
-  const numericBeforeEncryption = blocks.map(b => b.toString()).join(', ');
+  const signed = blocks.map(b => modExp(b, d, n));
+  users[user].signed = signed;
+  document.getElementById(`sign${user}Output`).innerText = `Signed:\n${signed.join(' | ')}\n\nNext: You can now encrypt the signed message.`;
+}
 
-  const signed = blocks.map(b => modExp(b, senderKeys.d, senderKeys.n));
-  const encrypted = signed.map(b => modExp(b, receiverKeys.e, receiverKeys.n));
-  const decrypted = encrypted.map(b => modExp(b, receiverKeys.d, receiverKeys.n));
-  const verified = decrypted.map(b => modExp(b, senderKeys.e, senderKeys.n));
-  const verifiedText = numbersToText(verified);
+// Encrypt a signed message
+function encryptMessage(user) {
+  const target = user === 'A' ? 'B' : 'A';
+  const { e, n } = users[target];
+  if (!e) return alert('Target public key missing');
+  const signed = users[user].signed;
+  if (!signed || signed.length === 0) return alert('No signed message to encrypt');
+  const encrypted = signed.map(b => modExp(b, e, n));
+  users[user].encrypted = encrypted;
+  document.getElementById(`encrypt${user}Output`).innerText = `Encrypted:\n${encrypted.join(' | ')}\n\nNext: Copy this output to User ${target}'s message box and decrypt.`;
+}
 
-  const digits = verified.map(b => b.toString().padStart(blockSize, '0').match(/.{1,2}/g).join(', ')).join(' | ');
-  const letters = numbersToText(verified);
+// Encrypt a raw (unsigned) message
+function encryptRawMessage(user) {
+  const target = user === 'A' ? 'B' : 'A';
+  const { e, n } = users[target];
+  if (!e) return alert('Target public key missing');
+  const msg = document.getElementById(`msg${user}`).value;
+  const numeric = textToNumbers(msg);
+  const blockSize = determineBlockSize(n);
+  const blocks = splitIntoBlocks(numeric, blockSize);
+  const encrypted = blocks.map(b => modExp(b, e, n));
+  document.getElementById(`encrypt${user}RawOutput`).innerText = `Encrypted Raw:\n${encrypted.join(' | ')}\n\nNext: Copy this output to User ${target}'s message box and decrypt.`;
+}
 
-  document.getElementById("simulationOutput").innerText =
-    `From ${sender} to ${receiver}:
-Message: ${message}
+// Decrypt a message using the user's private key
+function decryptMessage(user) {
+  const input = document.getElementById(`msg${user}`).value.split('|').map(s => BigInt(s.trim()));
+  const { d, n } = users[user];
+  if (!d) return alert('Private key missing');
+  const decrypted = input.map(b => modExp(b, d, n));
+  users[user].decrypted = decrypted;
+  const text = numbersToText(decrypted);
+  document.getElementById(`decrypt${user}Output`).innerText = `Decrypted:\n${text}\n\nNext: You may verify this if it was signed.`;
+}
 
-Numeric Before Encryption: ${numericBeforeEncryption}
-Signed Blocks: ${signed.join(' | ')}
-Encrypted Blocks: ${encrypted.join(' | ')}
-Decrypted Blocks: ${decrypted.join(' | ')}
-Verified Blocks: ${verified.join(' | ')}
-
-Decoded 2-digit Values: ${digits}
-Corresponding Letters: ${letters}
-
-SUCESS: Signature ${verifiedText === message ? 'Valid' : 'Invalid'}`;
+// Verify a signature using the sender's public key
+function verifyMessage(user) {
+  const input = users[user].decrypted;
+  const target = user === 'A' ? 'B' : 'A';
+  const { e, n } = users[target];
+  if (!e) return alert('Target public key missing');
+  if (!input || input.length === 0) return alert('No decrypted blocks to verify');
+  const verified = input.map(b => modExp(b, e, n));
+  const text = numbersToText(verified);
+  document.getElementById(`verify${user}Output`).innerText = `Verified:\n${text}`;
 }
 </script>
 
